@@ -14,6 +14,10 @@
 		6273156622EC7AD30062945B /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 6273156522EC7AD30062945B /* Assets.xcassets */; };
 		6273156922EC7AD30062945B /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 6273156722EC7AD30062945B /* LaunchScreen.storyboard */; };
 		6273156C22EC7AD30062945B /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 6273156B22EC7AD30062945B /* main.m */; };
+		6273157422EC7BBA0062945B /* DVAssetLoaderDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 6273157322EC7BBA0062945B /* DVAssetLoaderDelegate.m */; };
+		6273157A22EC7CC20062945B /* DVURLAsset.m in Sources */ = {isa = PBXBuildFile; fileRef = 6273157922EC7CC20062945B /* DVURLAsset.m */; };
+		6273157D22EC7D3C0062945B /* DVAssetLoaderError.m in Sources */ = {isa = PBXBuildFile; fileRef = 6273157C22EC7D3C0062945B /* DVAssetLoaderError.m */; };
+		6273157F22EC7D740062945B /* DVAssetLoaderHelpers.m in Sources */ = {isa = PBXBuildFile; fileRef = 6273157E22EC7D740062945B /* DVAssetLoaderHelpers.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -28,6 +32,16 @@
 		6273156822EC7AD30062945B /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		6273156A22EC7AD30062945B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		6273156B22EC7AD30062945B /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
+		6273157222EC7B6C0062945B /* DVAssetLoader.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DVAssetLoader.h; sourceTree = "<group>"; };
+		6273157322EC7BBA0062945B /* DVAssetLoaderDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DVAssetLoaderDelegate.m; sourceTree = "<group>"; };
+		6273157522EC7BCF0062945B /* DVAssetLoaderDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DVAssetLoaderDelegate.h; sourceTree = "<group>"; };
+		6273157722EC7C5D0062945B /* DVAssetLoaderDelegatesDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DVAssetLoaderDelegatesDelegate.h; sourceTree = "<group>"; };
+		6273157822EC7C920062945B /* DVURLAsset.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DVURLAsset.h; sourceTree = "<group>"; };
+		6273157922EC7CC20062945B /* DVURLAsset.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DVURLAsset.m; sourceTree = "<group>"; };
+		6273157B22EC7D2C0062945B /* DVAssetLoaderError.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DVAssetLoaderError.h; sourceTree = "<group>"; };
+		6273157C22EC7D3C0062945B /* DVAssetLoaderError.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DVAssetLoaderError.m; sourceTree = "<group>"; };
+		6273157E22EC7D740062945B /* DVAssetLoaderHelpers.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DVAssetLoaderHelpers.m; sourceTree = "<group>"; };
+		6273158022EC7D810062945B /* DVAssetLoaderHelpers.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DVAssetLoaderHelpers.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -70,6 +84,16 @@
 				6273156A22EC7AD30062945B /* Info.plist */,
 				6273156B22EC7AD30062945B /* main.m */,
 				6273156222EC7AD00062945B /* dv.xcdatamodeld */,
+				6273157222EC7B6C0062945B /* DVAssetLoader.h */,
+				6273157522EC7BCF0062945B /* DVAssetLoaderDelegate.h */,
+				6273157322EC7BBA0062945B /* DVAssetLoaderDelegate.m */,
+				6273157722EC7C5D0062945B /* DVAssetLoaderDelegatesDelegate.h */,
+				6273157822EC7C920062945B /* DVURLAsset.h */,
+				6273157922EC7CC20062945B /* DVURLAsset.m */,
+				6273157B22EC7D2C0062945B /* DVAssetLoaderError.h */,
+				6273157C22EC7D3C0062945B /* DVAssetLoaderError.m */,
+				6273157E22EC7D740062945B /* DVAssetLoaderHelpers.m */,
+				6273158022EC7D810062945B /* DVAssetLoaderHelpers.h */,
 			);
 			path = dv;
 			sourceTree = "<group>";
@@ -144,10 +168,14 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				6273157A22EC7CC20062945B /* DVURLAsset.m in Sources */,
 				6273155E22EC7AD00062945B /* ViewController.m in Sources */,
 				6273155B22EC7AD00062945B /* AppDelegate.m in Sources */,
 				6273156C22EC7AD30062945B /* main.m in Sources */,
 				6273156422EC7AD00062945B /* dv.xcdatamodeld in Sources */,
+				6273157F22EC7D740062945B /* DVAssetLoaderHelpers.m in Sources */,
+				6273157D22EC7D3C0062945B /* DVAssetLoaderError.m in Sources */,
+				6273157422EC7BBA0062945B /* DVAssetLoaderDelegate.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

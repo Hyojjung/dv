@@ -1,22 +1,15 @@
 //
-//  AppDelegate.h
-//  dv
+//  DVAppDelegate.h
+//  DVAssetLoaderDelegate
 //
-//  Created by 김효정 on 27/07/2019.
-//  Copyright © 2019 김효정. All rights reserved.
+//  Created by vdugnist on 01/02/2018.
+//  Copyright (c) 2018 vdugnist. All rights reserved.
 //
 
-#import <UIKit/UIKit.h>
-#import <CoreData/CoreData.h>
+@import UIKit;
 
-@interface AppDelegate : UIResponder <UIApplicationDelegate>
+@interface DVAppDelegate : UIResponder <UIApplicationDelegate>
 
 @property (strong, nonatomic) UIWindow *window;
 
-@property (readonly, strong) NSPersistentContainer *persistentContainer;
-
-- (void)saveContext;
-
-
 @end
-
