@@ -74,16 +74,24 @@ class AssetResourceLoaderDelegate: NSObject {
         super.init()
     }
     
-    func searchedOperation(with dataTask: URLSessionDataTask) -> Operation? {
-        return operations.first{ (operation) -> Bool in
+    func searchedOperation(with dataTask: URLSessionDataTask) -> Operation {
+        let searchedOperation = operations.first{ (operation) -> Bool in
             return operation.dataTask == dataTask
         }
+        guard let operation = searchedOperation else {
+            fatalError("can not search operation with dataTask")
+        }
+        return operation
     }
 
-    func searchedOperation(with loadingRequest: AVAssetResourceLoadingRequest) -> Operation? {
-        return operations.first{ (operation) -> Bool in
+    func searchedOperation(with loadingRequest: AVAssetResourceLoadingRequest) -> Operation {
+        let searchedOperation = operations.first{ (operation) -> Bool in
             return operation.loadingRequest == loadingRequest
         }
+        guard let operation = searchedOperation else {
+            fatalError("can not search operation with loadingRequest")
+        }
+        return operation
     }
 
 }
@@ -123,10 +131,7 @@ extension AssetResourceLoaderDelegate: AVAssetResourceLoaderDelegate {
     }
     
     func resourceLoader(_ resourceLoader: AVAssetResourceLoader, didCancel loadingRequest: AVAssetResourceLoadingRequest) {
-        guard let operation = searchedOperation(with: loadingRequest) else {
-            print("can not find operation")
-            return
-        }
+        let operation = searchedOperation(with: loadingRequest)
         operation.dataTask.cancel()
         operations.remove(operation)
     }
@@ -135,31 +140,24 @@ extension AssetResourceLoaderDelegate: AVAssetResourceLoaderDelegate {
 extension AssetResourceLoaderDelegate: URLSessionDelegate, URLSessionDataDelegate {
     
     func urlSession(_ session: URLSession, dataTask: URLSessionDataTask, didReceive response: URLResponse, completionHandler: @escaping (URLSession.ResponseDisposition) -> Void) {
-        guard let operation = searchedOperation(with: dataTask) else {
-            print("can not find operation")
-            return
-        }
+        let operation = searchedOperation(with: dataTask)
         operation.loadingRequest.response = response
         operation.fillLoadingRequest(with: response)
         completionHandler(.allow)
     }
     
     func urlSession(_ session: URLSession, dataTask: URLSessionDataTask, didReceive data: Data) {
-        guard let operation = searchedOperation(with: dataTask) else {
-            print("can not find operation")
-            return
-        }
+        let operation = searchedOperation(with: dataTask)
         operation.loadingRequest.dataRequest?.respond(with: data)
     }
     
     func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
-        print("didCompleteWithError")
         guard
-            let dataTask = task as? URLSessionDataTask,
-            let operation = searchedOperation(with: dataTask) else {
-            print("can not find operation")
-            return
+            let dataTask = task as? URLSessionDataTask
+            else {
+            fatalError("can not convert task to data task")
         }
+        let operation = searchedOperation(with: dataTask)
         if let error = error {
             operation.loadingRequest.finishLoading(with: error)
         } else {
