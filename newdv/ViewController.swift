@@ -7,14 +7,21 @@
 //
 
 import UIKit
+import AVFoundation
 
 class ViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        // Do any additional setup after loading the view.
+        let url = URL(string: "https://obs.line-scdn.net/r/myhome/h/6BD7CF6D61426F07AEDCAD8C9D84E1DC22ce2686t092800d1")!
+        let asset = AVAsset(url: url)
+        
+        let playerItem = AVPlayerItem(asset: asset)
+        let player = AVPlayer(playerItem: playerItem)
+        let playerLayer = AVPlayerLayer(player: player)
+        playerLayer.frame = view.bounds
+        view.layer.addSublayer(playerLayer)
+        player.play()
     }
-
-
 }
 
