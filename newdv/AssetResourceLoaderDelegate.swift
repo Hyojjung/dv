@@ -9,12 +9,60 @@
 import AVFoundation
 import MobileCoreServices
 
+struct Operation: Hashable {
+    
+    let dataTask: URLSessionDataTask
+    let loadingRequest: AVAssetResourceLoadingRequest
+    
+    init(dataTask: URLSessionDataTask, loadingRequest: AVAssetResourceLoadingRequest) {
+        self.dataTask = dataTask
+        self.loadingRequest = loadingRequest
+    }
+    
+    func fillLoadingRequest(with response: URLResponse) {
+        guard
+            let contentInformationRequest = loadingRequest.contentInformationRequest,
+            let response = response as? HTTPURLResponse,
+            let mimeType = response.mimeType else {
+                return
+        }
+        let unmanagedMimeUTI = UTTypeCreatePreferredIdentifierForTag(kUTTagClassMIMEType, mimeType as CFString, nil)
+        let mimeUTI = unmanagedMimeUTI?.takeRetainedValue()
+        contentInformationRequest.contentType = CFBridgingRetain(mimeUTI) as? String
+
+        if let acceptRange = response.allHeaderFields["Accept-Ranges"] as? String {
+            contentInformationRequest.isByteRangeAccessSupported = acceptRange == "bytes"
+        }
+        
+        if let contentRange = response.allHeaderFields["Content-Range"] as? String,
+            let contentLengthString = contentRange.components(separatedBy: "/").last,
+            let contentLength = Int64(contentLengthString) {
+            contentInformationRequest.contentLength = contentLength
+        } else {
+            contentInformationRequest.contentLength = response.expectedContentLength
+        }
+    }
+}
+
+extension URL {
+    
+    func replaceScheme(to scheme: String) -> URL {
+        guard
+            var components = URLComponents(url: self, resolvingAgainstBaseURL: false)
+            else {
+                print("can not replace")
+                return self
+        }
+        components.scheme = scheme
+        if let url = components.url { return url }
+        return self
+    }
+}
+
 class AssetResourceLoaderDelegate: NSObject {
     
     let originalUrl: URL
-
-    var pendingRequest: AVAssetResourceLoadingRequest?
-    var dataTask: URLSessionDataTask?
+    var operations = Set<Operation>()
     lazy var session = {
         return URLSession(configuration: URLSessionConfiguration.default,
                           delegate: self,
@@ -26,58 +74,32 @@ class AssetResourceLoaderDelegate: NSObject {
         super.init()
     }
     
-    func urlForLoadingRequest(loadingRequest: AVAssetResourceLoadingRequest) -> URL {
-        guard let interceptedURL = loadingRequest.request.url else {
-            fatalError("dont have url!!")
+    func searchedOperation(with dataTask: URLSessionDataTask) -> Operation? {
+        return operations.first{ (operation) -> Bool in
+            return operation.dataTask == dataTask
         }
-        return fixedURLFromURL(url: interceptedURL)
     }
-    
-    func fixedURLFromURL(url: URL) -> URL {
-        var actualUrlComponents = URLComponents(url: url, resolvingAgainstBaseURL: false)
-        actualUrlComponents?.scheme = originalUrl.scheme
-        guard let actualUrl = actualUrlComponents?.url else {
-            fatalError("can not make url")
+
+    func searchedOperation(with loadingRequest: AVAssetResourceLoadingRequest) -> Operation? {
+        return operations.first{ (operation) -> Bool in
+            return operation.loadingRequest == loadingRequest
         }
-        return actualUrl
     }
-    
-    func fillInContentInformation(contentInformationRequest: AVAssetResourceLoadingContentInformationRequest,
-                                  response: URLResponse) {
-        guard
-            let mimeType = response.mimeType else {
-                return
-        }
-        let unmanagedMimeUTI = UTTypeCreatePreferredIdentifierForTag(kUTTagClassMIMEType, mimeType as CFString, nil)
-        let mimeUTI = unmanagedMimeUTI?.takeRetainedValue()
-        contentInformationRequest.contentType = CFBridgingRetain(mimeUTI) as? String
-        print("type is :")
-        print(mimeType)
-        
-        guard let httpResponse = response as? HTTPURLResponse
-            else {
-                print("can not convert to httpurlresponse")
-                return
-        }
-        if let acceptRange = httpResponse.allHeaderFields["Accept-Ranges"] as? String {
-            contentInformationRequest.isByteRangeAccessSupported = acceptRange == "bytes"
-        }
-        if let contentRange = httpResponse.allHeaderFields["Content-Range"] as? String,
-            let contentLengthString = contentRange.components(separatedBy: "/").last,
-            let contentLength = Int64(contentLengthString) {
-            contentInformationRequest.contentLength = contentLength
-        } else {
-            contentInformationRequest.contentLength = response.expectedContentLength
-        }
-        print(contentInformationRequest)
-    }
+
 }
 
 extension AssetResourceLoaderDelegate: AVAssetResourceLoaderDelegate {
     
     func resourceLoader(_ resourceLoader: AVAssetResourceLoader, shouldWaitForLoadingOfRequestedResource loadingRequest: AVAssetResourceLoadingRequest) -> Bool {
         print("shouldWaitForLoadingOfRequestedResource")
-        let actualUrl = urlForLoadingRequest(loadingRequest: loadingRequest)
+        guard
+            let url = loadingRequest.request.url,
+            let originalUrlScheme = originalUrl.scheme
+            else {
+                print("can not redirect!!")
+                return false
+        }
+        let actualUrl = url.replaceScheme(to: originalUrlScheme)
         var request = URLRequest(url: actualUrl)
         if loadingRequest.contentInformationRequest != nil {
             request.allHTTPHeaderFields = ["Range": "bytes=0-1"]
@@ -93,34 +115,56 @@ extension AssetResourceLoaderDelegate: AVAssetResourceLoaderDelegate {
             return false
         }
         request.cachePolicy = .useProtocolCachePolicy
-        dataTask = session.dataTask(with: request)
-        dataTask?.resume()
-        pendingRequest = loadingRequest
+        let dataTask = session.dataTask(with: request)
+        let operation = Operation(dataTask: dataTask, loadingRequest: loadingRequest)
+        operations.insert(operation)
+        dataTask.resume()
         return true
     }
     
     func resourceLoader(_ resourceLoader: AVAssetResourceLoader, didCancel loadingRequest: AVAssetResourceLoadingRequest) {
-        dataTask?.cancel()
+        guard let operation = searchedOperation(with: loadingRequest) else {
+            print("can not find operation")
+            return
+        }
+        operation.dataTask.cancel()
+        operations.remove(operation)
     }
 }
 
 extension AssetResourceLoaderDelegate: URLSessionDelegate, URLSessionDataDelegate {
     
     func urlSession(_ session: URLSession, dataTask: URLSessionDataTask, didReceive response: URLResponse, completionHandler: @escaping (URLSession.ResponseDisposition) -> Void) {
-        pendingRequest?.response = response
-        if let contentInformationRequest = pendingRequest?.contentInformationRequest {
-            fillInContentInformation(contentInformationRequest: contentInformationRequest, response: response)
-            pendingRequest?.finishLoading()
-            self.dataTask?.cancel()
+        guard let operation = searchedOperation(with: dataTask) else {
+            print("can not find operation")
+            return
         }
+        operation.loadingRequest.response = response
+        operation.fillLoadingRequest(with: response)
         completionHandler(.allow)
     }
     
     func urlSession(_ session: URLSession, dataTask: URLSessionDataTask, didReceive data: Data) {
-        pendingRequest?.dataRequest?.respond(with: data)
+        guard let operation = searchedOperation(with: dataTask) else {
+            print("can not find operation")
+            return
+        }
+        operation.loadingRequest.dataRequest?.respond(with: data)
     }
     
     func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
-        pendingRequest?.finishLoading(with: error)
+        print("didCompleteWithError")
+        guard
+            let dataTask = task as? URLSessionDataTask,
+            let operation = searchedOperation(with: dataTask) else {
+            print("can not find operation")
+            return
+        }
+        if let error = error {
+            operation.loadingRequest.finishLoading(with: error)
+        } else {
+            operation.loadingRequest.finishLoading()
+        }
+        operations.remove(operation)
     }
 }

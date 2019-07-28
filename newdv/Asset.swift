@@ -13,16 +13,8 @@ class Asset: AVURLAsset {
     let delegate: AVAssetResourceLoaderDelegate
     
     init(url: URL) {
-        var components = URLComponents(url: url, resolvingAgainstBaseURL: false)
-        components?.scheme = "fake"
         delegate = AssetResourceLoaderDelegate(url: url)
-        guard let fakeUrl = components?.url
-            else {
-                print("can not make fake url")
-                super.init(url: url, options: nil)
-                return
-        }
-        super.init(url: fakeUrl, options: nil)
+        super.init(url: url.replaceScheme(to: "fake"), options: nil)
         resourceLoader.setDelegate(delegate, queue: DispatchQueue.main)
     }
 }
