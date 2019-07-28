@@ -10,9 +10,12 @@ import AVFoundation
 
 class Asset: AVURLAsset {
     
-    init(url: URL, delegate: AVAssetResourceLoaderDelegate) {
+    let delegate: AVAssetResourceLoaderDelegate
+    
+    init(url: URL) {
         var components = URLComponents(url: url, resolvingAgainstBaseURL: false)
         components?.scheme = "fake"
+        delegate = AssetResourceLoaderDelegate(url: url)
         guard let fakeUrl = components?.url
             else {
                 print("can not make fake url")

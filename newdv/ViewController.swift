@@ -14,8 +14,7 @@ class ViewController: AVPlayerViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         let url = URL(string: "https://obs.line-scdn.net/r/myhome/h/6BD7CF6D61426F07AEDCAD8C9D84E1DC22ce2686t092800d1")!
-        let delegate = AssetResourceLoaderDelegate(url: url)
-        let asset = Asset(url: url, delegate: delegate)
+        let asset = Asset(url: url)
         let playerItem = AVPlayerItem(asset: asset)
         player = AVPlayer(playerItem: playerItem)
         player?.play()
