@@ -10,7 +10,7 @@ import AVFoundation
 
 class Asset: AVURLAsset {
     
-    init(url: URL) {
+    init(url: URL, delegate: AVAssetResourceLoaderDelegate) {
         var components = URLComponents(url: url, resolvingAgainstBaseURL: false)
         components?.scheme = "fake"
         guard let fakeUrl = components?.url
@@ -20,7 +20,6 @@ class Asset: AVURLAsset {
                 return
         }
         super.init(url: fakeUrl, options: nil)
-        let delegate = AssetResourceLoaderDelegate(url: url)
         resourceLoader.setDelegate(delegate, queue: DispatchQueue.main)
     }
 }

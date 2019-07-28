@@ -76,6 +76,7 @@ class AssetResourceLoaderDelegate: NSObject {
 extension AssetResourceLoaderDelegate: AVAssetResourceLoaderDelegate {
     
     func resourceLoader(_ resourceLoader: AVAssetResourceLoader, shouldWaitForLoadingOfRequestedResource loadingRequest: AVAssetResourceLoadingRequest) -> Bool {
+        print("shouldWaitForLoadingOfRequestedResource")
         let actualUrl = urlForLoadingRequest(loadingRequest: loadingRequest)
         var request = URLRequest(url: actualUrl)
         if loadingRequest.contentInformationRequest != nil {
