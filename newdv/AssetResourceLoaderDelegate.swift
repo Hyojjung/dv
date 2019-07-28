@@ -93,37 +93,43 @@ class AssetResourceLoaderDelegate: NSObject {
         }
         return operation
     }
-
+    
+    func rangeHeaderField(with loadingRequest: AVAssetResourceLoadingRequest) -> String? {
+        if loadingRequest.contentInformationRequest != nil {
+            return "bytes=0-1"
+        } else if loadingRequest.dataRequest?.requestsAllDataToEndOfResource == true,
+            let requestedOffset = loadingRequest.dataRequest?.requestedOffset {
+            return "bytes=\(requestedOffset)-"
+        }
+        else if let dataRequest = loadingRequest.dataRequest {
+            let requestedOffset = Int(dataRequest.requestedOffset)
+            let requestedLength = dataRequest.requestedLength
+            return "bytes=\(requestedOffset)-\(requestedOffset + requestedLength - 1)"
+        }
+        return nil
+    }
+    
+    func request(with loadingRequest: AVAssetResourceLoadingRequest) -> URLRequest {
+        guard
+            let url = loadingRequest.request.url,
+            let originalUrlScheme = originalUrl.scheme
+            else {
+                fatalError("can not redirect!!")
+        }
+        let actualUrl = url.replaceScheme(to: originalUrlScheme)
+        var request = URLRequest(url: actualUrl)
+        let rangeHeaderValue = rangeHeaderField(with: loadingRequest)
+        request.setValue(rangeHeaderValue, forHTTPHeaderField: "Range")
+        request.cachePolicy = .useProtocolCachePolicy
+        return request
+    }
 }
 
 extension AssetResourceLoaderDelegate: AVAssetResourceLoaderDelegate {
     
     func resourceLoader(_ resourceLoader: AVAssetResourceLoader, shouldWaitForLoadingOfRequestedResource loadingRequest: AVAssetResourceLoadingRequest) -> Bool {
-        print("shouldWaitForLoadingOfRequestedResource")
-        guard
-            let url = loadingRequest.request.url,
-            let originalUrlScheme = originalUrl.scheme
-            else {
-                print("can not redirect!!")
-                return false
-        }
-        let actualUrl = url.replaceScheme(to: originalUrlScheme)
-        var request = URLRequest(url: actualUrl)
-        if loadingRequest.contentInformationRequest != nil {
-            request.allHTTPHeaderFields = ["Range": "bytes=0-1"]
-        } else if loadingRequest.dataRequest?.requestsAllDataToEndOfResource == true,
-            let requestedOffset = loadingRequest.dataRequest?.requestedOffset {
-            request.allHTTPHeaderFields = ["Range" : "bytes=\(requestedOffset)-"]
-        }
-        else if let dataRequest = loadingRequest.dataRequest {
-            let requestedOffset = Int(dataRequest.requestedOffset)
-            let requestedLength = dataRequest.requestedLength
-            request.allHTTPHeaderFields = ["Range" : "bytes=\(requestedOffset)-\(requestedOffset + requestedLength - 1)"]
-        } else {
-            return false
-        }
-        request.cachePolicy = .useProtocolCachePolicy
-        let dataTask = session.dataTask(with: request)
+        let dataRequest = request(with: loadingRequest)
+        let dataTask = session.dataTask(with: dataRequest)
         let operation = Operation(dataTask: dataTask, loadingRequest: loadingRequest)
         operations.insert(operation)
         dataTask.resume()
